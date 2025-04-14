@@ -1,79 +1,365 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Скачать базу данных Access</title>
+    <title>Калькулятор питания</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #2c3e50;
+            color: white;
             text-align: center;
-            background-color: #f4f4f4;
-            margin: 50px;
+            margin: 0;
+            padding: 20px;
         }
         .container {
-            background: white;
+            background: #34495e;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            display: inline-block;
+            border-radius: 10px;
+            max-width: 500px;
+            margin: auto;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 5px;
         }
         button {
-            background-color: #007bff;
+            background: #27ae60;
             color: white;
-            border: none;
-            padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
-            border-radius: 5px;
-            margin-top: 10px;
         }
-        button:hover {
-            background-color: #0056b3;
+        .result {
+            margin-top: 15px;
+            font-size: 18px;
+            color: yellow;
         }
-        #status {
+        table {
             margin-top: 20px;
-            font-size: 14px;
-            color: red;
+            width: 100%;
+            color: white;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid white;
+            padding: 8px;
         }
     </style>
 </head>
 <body>
+    <h1>Умный Калькулятор питания</h1>
     <div class="container">
-        <h2>Скачать базу данных Access</h2>
-        <button onclick="downloadAccess()">Скачать</button>
-        <p id="status"></p>
+        <label>Возраст:</label>
+        <input type="number" id="age" placeholder="Введите возраст">
+        <label>Вес (кг):</label>
+        <input type="number" id="weight" placeholder="Введите вес">
+        <label>Рост (см):</label>
+        <input type="number" id="height" placeholder="Введите рост">
+        <label>Пол:</label>
+        <select id="gender">
+            <option>Мужской</option>
+            <option>Женский</option>
+        </select>
+        <label>Активность:</label>
+        <select id="activity">
+            <option value="1.2">Минимальная</option>
+            <option value="1.375">Лёгкая</option>
+            <option value="1.55">Средняя</option>
+            <option value="1.725">Высокая</option>
+            <option value="1.9">Экстремальная</option>
+        </select>
+        <label>Цель:</label>
+        <select id="goal">
+            <option value="-300">Похудение</option>
+            <option value="0">Поддержание веса</option>
+            <option value="300">Набор массы</option>
+        </select>
+        <button onclick="calculate()">Составить рацион</button>
+        <div class="result" id="result"></div>
+        <div id="menu"></div>
     </div>
-
     <script>
-        function downloadAccess() {
-            const url = "http://localhost:8080/downloadAccess";
-            console.log("📥 Начало скачивания...");
+        const dishes = {
+                    breakfast: [
+                { name: "Овсяная каша", calories: 150, protein: 5, fat: 3, carbs: 27 },
+                { name: "Яичница с овощами", calories: 200, protein: 12, fat: 10, carbs: 8 },
+                { name: "Творог с ягодами", calories: 180, protein: 14, fat: 6, carbs: 15 },
+                { name: "Панкейки с бананом", calories: 220, protein: 7, fat: 5, carbs: 40 },
+                { name: "Гречневая каша с молоком", calories: 190, protein: 6, fat: 4, carbs: 35 },
+                { name: "Бутерброд с яйцом и авокадо", calories: 250, protein: 8, fat: 12, carbs: 25 },
+                { name: "Смузи с йогуртом и фруктами", calories: 160, protein: 4, fat: 2, carbs: 35 },
+                { name: "Овощной омлет", calories: 180, protein: 10, fat: 6, carbs: 12 },
+                { name: "Тост с арахисовой пастой и бананом", calories: 210, protein: 8, fat: 9, carbs: 28 },
+                { name: "Запеканка из творога", calories: 200, protein: 15, fat: 7, carbs: 18 },
+                { name: "Сырники", calories: 230, protein: 12, fat: 8, carbs: 22 },
+                { name: "Блинчики с мёдом", calories: 240, protein: 6, fat: 9, carbs: 30 },
+                { name: "Гранола с орехами и сухофруктами", calories: 260, protein: 8, fat: 12, carbs: 35 },
+                { name: "Мюсли с молоком", calories: 180, protein: 7, fat: 4, carbs: 28 },
+                { name: "Булочка с ветчиной и сыром", calories: 220, protein: 10, fat: 8, carbs: 25 },
+                { name: "Киноа с фруктами", calories: 200, protein: 6, fat: 4, carbs: 30 },
+                { name: "Протеиновый шейк с молоком", calories: 180, protein: 15, fat: 3, carbs: 10 },
+                { name: "Творог с мёдом и орехами", calories: 190, protein: 14, fat: 7, carbs: 15 },
+                { name: "Кукурузные хлопья с йогуртом", calories: 170, protein: 6, fat: 4, carbs: 25 },
+                { name: "Овсяноблин с ягодами", calories: 210, protein: 10, fat: 6, carbs: 22 },
+                { name: "Тост с лососем и авокадо", calories: 250, protein: 12, fat: 14, carbs: 18 },
+                { name: "Гречневая каша с орехами", calories: 200, protein: 7, fat: 8, carbs: 24 },
+                { name: "Смузи с овсянкой и бананом", calories: 190, protein: 6, fat: 3, carbs: 28 },
+                { name: "Фруктовый салат с йогуртом", calories: 160, protein: 4, fat: 2, carbs: 32 },
+                { name: "Батончик с мюсли и орехами", calories: 170, protein: 5, fat: 7, carbs: 20 },
+                { name: "Рисовая каша на молоке", calories: 190, protein: 6, fat: 5, carbs: 30 },
+                { name: "Шоколадный смузи с протеином", calories: 200, protein: 15, fat: 6, carbs: 12 },
+                { name: "Блинчики с творогом", calories: 230, protein: 10, fat: 8, carbs: 25 },
+                { name: "Салат из киноа и фруктов", calories: 200, protein: 7, fat: 4, carbs: 28 },
+                { name: "Овощной хлеб с хумусом", calories: 190, protein: 8, fat: 5, carbs: 22 }
+            ],
 
-            fetch(url, { method: "GET" })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`❌ Сервер ответил с ошибкой: ${response.status}`);
-                }
-                return response.blob();
-            })
-            .then(blob => {
-                console.log("✅ Файл получен, начинаем скачивание...");
+                    lunch: [
+                { name: "Борщ", calories: 250, protein: 10, fat: 10, carbs: 30 },
+                { name: "Гречка с курицей", calories: 350, protein: 25, fat: 8, carbs: 45 },
+                { name: "Рис с овощами и рыбой", calories: 300, protein: 20, fat: 8, carbs: 40 },
+                { name: "Макароны с курицей", calories: 400, protein: 30, fat: 10, carbs: 50 },
+                { name: "Овощное рагу с индейкой", calories: 280, protein: 23, fat: 7, carbs: 25 },
+                { name: "Стейк с овощами гриль", calories: 350, protein: 30, fat: 10, carbs: 15 },
+                { name: "Фасоль с томатами", calories: 250, protein: 12, fat: 5, carbs: 30 },
+                { name: "Куриный суп с лапшой", calories: 220, protein: 18, fat: 6, carbs: 25 },
+                { name: "Плов с курицей", calories: 400, protein: 25, fat: 12, carbs: 45 },
+                { name: "Тушёная говядина с овощами", calories: 320, protein: 28, fat: 12, carbs: 15 },
+                { name: "Рагу из кабачков и моркови", calories: 200, protein: 6, fat: 5, carbs: 30 },
+                { name: "Рисовый суп с курицей", calories: 250, protein: 15, fat: 7, carbs: 28 },
+                { name: "Куриное карри с рисом", calories: 370, protein: 27, fat: 10, carbs: 40 },
+                { name: "Запечённая рыба с брокколи", calories: 280, protein: 25, fat: 8, carbs: 12 },
+                { name: "Овощное рагу с рисом", calories: 250, protein: 12, fat: 5, carbs: 35 },
+                { name: "Гречка с грибами", calories: 270, protein: 10, fat: 8, carbs: 40 },
+                { name: "Салат с киноа и овощами", calories: 250, protein: 10, fat: 6, carbs: 30 },
+                { name: "Суп из чечевицы", calories: 300, protein: 20, fat: 8, carbs: 35 },
+                { name: "Куриные рулетики с зеленью", calories: 330, protein: 30, fat: 9, carbs: 10 },
+                { name: "Лазанья с овощами и сыром", calories: 400, protein: 18, fat: 15, carbs: 50 },
+                { name: "Тефтели из индейки в соусе", calories: 320, protein: 28, fat: 12, carbs: 18 },
+                { name: "Куриный салат с яблоками", calories: 250, protein: 20, fat: 5, carbs: 15 },
+                { name: "Паста с томатами и базиликом", calories: 330, protein: 12, fat: 6, carbs: 50 },
+                { name: "Говяжий стейк с овощами", calories: 400, protein: 35, fat: 15, carbs: 10 },
+                { name: "Запечённый картофель с рыбой", calories: 350, protein: 20, fat: 12, carbs: 35 },
+                { name: "Котлеты из курицы с кашей", calories: 370, protein: 25, fat: 10, carbs: 45 },
+                { name: "Суп из брокколи с сыром", calories: 220, protein: 12, fat: 8, carbs: 10 },
+                { name: "Тыквенный суп", calories: 180, protein: 8, fat: 4, carbs: 28 },
+                { name: "Овощной суп с фрикадельками", calories: 250, protein: 18, fat: 6, carbs: 20 }
+            ],
 
-                const link = document.createElement("a");
-                link.href = window.URL.createObjectURL(blob);
-                link.download = "fire.accdb";
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-                document.getElementById("status").innerText = "✅ Файл успешно скачан!";
-            })
-            .catch(error => {
-                console.error("❌ Ошибка скачивания:", error);
-                document.getElementById("status").innerText = "❌ Ошибка: " + error.message;
-            });
+                        dinner: [
+                { name: "Овощной салат с тунцом", calories: 200, protein: 20, fat: 5, carbs: 10 },
+                { name: "Тушёная капуста с индейкой", calories: 220, protein: 23, fat: 7, carbs: 12 },
+                { name: "Омлет с сыром", calories: 250, protein: 18, fat: 15, carbs: 5 },
+                { name: "Куриные грудки с овощами", calories: 270, protein: 30, fat: 8, carbs: 10 },
+                { name: "Филе лосося с брокколи", calories: 300, protein: 25, fat: 15, carbs: 5 },
+                { name: "Запечённые овощи с сыром фета", calories: 200, protein: 10, fat: 10, carbs: 20 },
+                { name: "Овощной суп с говядиной", calories: 220, protein: 18, fat: 8, carbs: 15 },
+                { name: "Рулетики из индейки с зеленью", calories: 250, protein: 30, fat: 10, carbs: 5 },
+                { name: "Салат из киноа и шпината", calories: 230, protein: 12, fat: 8, carbs: 25 },
+                { name: "Куриные тефтели в томатном соусе", calories: 280, protein: 24, fat: 10, carbs: 15 },
+                { name: "Запечённая рыба с овощами", calories: 250, protein: 22, fat: 8, carbs: 10 },
+                { name: "Тушёный шпинат с чесноком", calories: 180, protein: 6, fat: 7, carbs: 15 },
+                { name: "Суп-пюре из тыквы", calories: 200, protein: 8, fat: 6, carbs: 30 },
+                { name: "Кабачки, фаршированные курицей", calories: 270, protein: 24, fat: 8, carbs: 12 },
+                { name: "Рыбные котлеты с овощным гарниром", calories: 300, protein: 26, fat: 12, carbs: 15 },
+                { name: "Куриные стрипсы на гриле", calories: 240, protein: 28, fat: 6, carbs: 8 },
+                { name: "Салат с яйцом и авокадо", calories: 250, protein: 12, fat: 15, carbs: 10 },
+                { name: "Гречка с овощами и грибами", calories: 230, protein: 8, fat: 6, carbs: 30 },
+                { name: "Салат из свежих овощей с курицей", calories: 250, protein: 22, fat: 5, carbs: 10 },
+                { name: "Куриное рагу с кабачками", calories: 260, protein: 24, fat: 8, carbs: 12 },
+                { name: "Салат Цезарь с креветками", calories: 280, protein: 20, fat: 10, carbs: 10 },
+                { name: "Запечённая индейка с овощами", calories: 300, protein: 32, fat: 8, carbs: 12 },
+                { name: "Сырные палочки из моцареллы", calories: 200, protein: 10, fat: 12, carbs: 8 },
+                { name: "Омлет с грибами и шпинатом", calories: 220, protein: 16, fat: 8, carbs: 5 },
+                { name: "Паста из цуккини с соусом песто", calories: 230, protein: 8, fat: 10, carbs: 15 },
+                { name: "Баклажаны на гриле с сыром", calories: 200, protein: 8, fat: 8, carbs: 20 },
+                { name: "Куриные рулеты с сыром", calories: 280, protein: 30, fat: 10, carbs: 5 },
+                { name: "Томаты, фаршированные говядиной", calories: 300, protein: 28, fat: 10, carbs: 12 },
+                { name: "Суп-пюре из шпината", calories: 180, protein: 8, fat: 5, carbs: 15 },
+                { name: "Креветки на гриле с чесноком", calories: 220, protein: 25, fat: 6, carbs: 5 }
+            ],
+                        snack: [
+                { name: "Фруктовый салат", calories: 120, protein: 2, fat: 1, carbs: 30 },
+                { name: "Ореховый батончик", calories: 150, protein: 4, fat: 8, carbs: 18 },
+                { name: "Йогурт с орехами", calories: 180, protein: 6, fat: 9, carbs: 15 },
+                { name: "Протеиновый шейк", calories: 160, protein: 20, fat: 2, carbs: 5 },
+                { name: "Творог с мёдом", calories: 170, protein: 14, fat: 6, carbs: 12 },
+                { name: "Смузи с фруктами", calories: 130, protein: 2, fat: 1, carbs: 28 },
+                { name: "Кусочек горького шоколада", calories: 100, protein: 2, fat: 8, carbs: 5 },
+                { name: "Банан", calories: 110, protein: 1, fat: 0, carbs: 27 },
+                { name: "Греческий йогурт", calories: 120, protein: 10, fat: 4, carbs: 5 },
+                { name: "Сухофрукты", calories: 140, protein: 2, fat: 0, carbs: 35 },
+                { name: "Овсяное печенье", calories: 160, protein: 4, fat: 6, carbs: 25 },
+                { name: "Гранола", calories: 150, protein: 5, fat: 6, carbs: 20 },
+                { name: "Печёное яблоко", calories: 100, protein: 1, fat: 0, carbs: 25 },
+                { name: "Рисовые хлебцы", calories: 90, protein: 2, fat: 0, carbs: 20 },
+                { name: "Авокадо на хлебце", calories: 140, protein: 3, fat: 9, carbs: 10 }
+            ]
         }
+
+        function calculate() {
+            const age = parseInt(document.getElementById("age").value);
+            const weight = parseFloat(document.getElementById("weight").value);
+            const height = parseFloat(document.getElementById("height").value);
+            const gender = document.getElementById("gender").value;
+            const activity = parseFloat(document.getElementById("activity").value);
+            const goal = parseInt(document.getElementById("goal").value);
+
+            if (isNaN(age) || isNaN(weight) || isNaN(height)) {
+                document.getElementById("result").innerText = "Введите корректные данные.";
+                return;
+            }
+
+            const bmr = gender === "Мужской"
+                ? 88.36 + (13.4 * weight) + (4.8 * height) - (5.7 * age)
+                : 447.6 + (9.2 * weight) + (3.1 * height) - (4.3 * age);
+
+            const calories = Math.round(bmr * activity + goal);
+            const protein = Math.round(0.3 * calories / 4);
+            const fats = Math.round(0.2 * calories / 9);
+            const carbs = Math.round(0.5 * calories / 4);
+
+            document.getElementById("result").innerHTML = `
+                <b>Суточная норма:</b><br>
+                Калории: ${calories} ккал<br>
+                Белки: ${protein} г, Жиры: ${fats} г, Углеводы: ${carbs} г
+            `;
+
+            const target = {
+                calories: calories / 4,
+                protein: protein / 4,
+                fat: fats / 4,
+                carbs: carbs / 4
+            };
+
+            function selectDishWithMass(dishList, target) {
+                let best = null;
+                let bestDiff = Infinity;
+
+                for (const dish of dishList) {
+                    let ratio = Math.min(
+                        target.calories / dish.calories,
+                        target.protein / dish.protein,
+                        target.fat / dish.fat,
+                        target.carbs / dish.carbs
+                    );
+
+                    ratio = Math.max(0.5, Math.min(ratio, 5));
+
+                    const adjusted = {
+                        name: dish.name,
+                        mass: Math.round(ratio * 100),
+                        calories: Math.round(dish.calories * ratio),
+                        protein: Math.round(dish.protein * ratio),
+                        fat: Math.round(dish.fat * ratio),
+                        carbs: Math.round(dish.carbs * ratio)
+                    };
+
+                    const diff = Math.abs(adjusted.calories - target.calories)
+                            + Math.abs(adjusted.protein - target.protein)
+                            + Math.abs(adjusted.fat - target.fat)
+                            + Math.abs(adjusted.carbs - target.carbs);
+
+                    if (diff < bestDiff) {
+                        best = adjusted;
+                        bestDiff = diff;
+                    }
+                }
+
+                return best;
+            }
+
+            function totalMacros(meals) {
+                return meals.flat().reduce((sum, m) => ({
+                    calories: sum.calories + m.calories,
+                    protein: sum.protein + m.protein,
+                    fat: sum.fat + m.fat,
+                    carbs: sum.carbs + m.carbs
+                }), { calories: 0, protein: 0, fat: 0, carbs: 0 });
+            }
+
+            function addSecondDishIfNeeded(meals, type) {
+                const current = totalMacros([meals.breakfast, meals.lunch, meals.dinner, meals.snack]);
+                const remaining = {
+                    calories: calories - current.calories,
+                    protein: protein - current.protein,
+                    fat: fats - current.fat,
+                    carbs: carbs - current.carbs
+                };
+
+                if (remaining.calories < 100) return;
+
+                const dish = selectDishWithMass(dishes[type], {
+                    calories: remaining.calories / 2,
+                    protein: remaining.protein / 2,
+                    fat: remaining.fat / 2,
+                    carbs: remaining.carbs / 2
+                });
+
+                if (dish) meals[type].push(dish);
+            }
+            function getTotalMacros(meals) {
+                const total = {
+                    calories: 0,
+                    protein: 0,
+                    fat: 0,
+                    carbs: 0
+                };
+
+                for (const mealType in meals) {
+                    meals[mealType].forEach(dish => {
+                        total.calories += dish.calories;
+                        total.protein += dish.protein;
+                        total.fat += dish.fat;
+                        total.carbs += dish.carbs;
+                    });
+                }
+
+                return total;
+            }
+
+
+            const meals = {
+                breakfast: [selectDishWithMass(dishes.breakfast, target)],
+                lunch: [selectDishWithMass(dishes.lunch, target)],
+                dinner: [selectDishWithMass(dishes.dinner, target)],
+                snack: [selectDishWithMass(dishes.snack, target)]
+            };
+
+            // Добавим второе блюдо, если нужно (в порядке приоритета)
+            ["lunch", "dinner", "breakfast", "snack"].forEach(type => {
+                addSecondDishIfNeeded(meals, type);
+            });
+
+            function renderMeals(mealName, items, emoji) {
+                return items.map(item =>
+                    `<tr><td>${emoji} ${mealName}</td><td>${item.name}</td><td>${item.mass}</td><td>${item.calories}</td><td>${item.protein}</td><td>${item.fat}</td><td>${item.carbs}</td></tr>`
+                ).join("");
+            }
+
+            document.getElementById("menu").innerHTML = `
+                <h3>Рекомендуемый рацион:</h3>
+                <table>
+                    <tr><th>Прием пищи</th><th>Блюдо</th><th>Масса (г)</th><th>Ккал</th><th>Б</th><th>Ж</th><th>У</th></tr>
+                    ${renderMeals("Завтрак", meals.breakfast, "🍳")}
+                    ${renderMeals("Обед", meals.lunch, "🍲")}
+                    ${renderMeals("Ужин", meals.dinner, "🥗")}
+                    ${renderMeals("Перекус", meals.snack, "🍎")}
+                </table>
+            `;
+            const totals = getTotalMacros(meals);
+            document.getElementById("menu").innerHTML += `
+                <p><b>Фактический рацион:</b><br>
+                Калории: ${totals.calories} ккал, Белки: ${totals.protein} г, Жиры: ${totals.fat} г, Углеводы: ${totals.carbs} г</p>
+            `;
+
+            }
+
+
     </script>
 </body>
 </html>
+
