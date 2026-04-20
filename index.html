@@ -1,365 +1,545 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Калькулятор питания</title>
+    <title>Виртуальная лаборатория - Реакция Толленса</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #2c3e50;
-            color: white;
-            text-align: center;
             margin: 0;
-            padding: 20px;
+            height: 100vh;
+            background-image: url("backgroundIKT.webp");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
         }
-        .container {
-            background: #34495e;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 500px;
-            margin: auto;
-        }
-        input, select, button {
+
+        /* --- ВЕРХНЯЯ ПАНЕЛЬ (КНОПКИ ИНСТРУКЦИИ) --- */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            border: none;
+            padding: 15px 20px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            z-index: 100;
+            /* Полупрозрачный фон для лучшей читаемости кнопок */
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+        }
+
+        .top-btn {
+            background: rgba(30, 30, 30, 0.9);
+            color: #fff;
+            border: 1px solid #0f0;
+            padding: 10px 20px;
+            margin-right: 15px;
             border-radius: 5px;
-        }
-        button {
-            background: #27ae60;
-            color: white;
-            font-size: 16px;
             cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
-        .result {
-            margin-top: 15px;
-            font-size: 18px;
-            color: yellow;
+
+        .top-btn:hover {
+            background: #0f0;
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+            transform: translateY(-2px);
         }
-        table {
-            margin-top: 20px;
+
+        /* --- ЛАБОРАТОРНЫЙ СТОЛ --- */
+        .table-surface {
+            position: fixed;
+            bottom: 120px;
+            left: 10%;
+            width: 80%;
+            height: 25px;
+            background: linear-gradient(to bottom, #d2b48c, #8b7355);
+            border-radius: 5px 5px 0 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.6);
+            z-index: 10;
+        }
+        .table-front {
+            position: fixed;
+            bottom: 10px;
+            left: 10%;
+            width: 80%;
+            height: 110px;
+            background: linear-gradient(to bottom, rgba(90, 70, 50, 0.8), rgba(50, 40, 30, 0.9));
+            border-bottom: 5px solid #3e3226;
+            z-index: 9;
+        }
+
+        /* --- СЦЕНА --- */
+        .lab-scene {
+            position: fixed;
+            bottom: 145px;
+            left: 0;
             width: 100%;
-            color: white;
-            border-collapse: collapse;
+            height: 400px;
+            z-index: 15;
         }
-        th, td {
-            border: 1px solid white;
-            padding: 8px;
+
+        /* --- ДЕКОРАТИВНЫЕ КОЛБЫ --- */
+        .table-flasks {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 10%;
+            box-sizing: border-box;
+        }
+        .deco-flask {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0.9;
+            transition: 0.3s;
+        }
+        .deco-flask.used { opacity: 0.4; }
+        .flask-body {
+            width: 40px; height: 50px;
+            background: rgba(200, 220, 255, 0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 0 0 15px 15px;
+            position: relative;
+        }
+        .flask-body::before {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0; height: 40%;
+            background: rgba(100, 150, 255, 0.2);
+            border-radius: 0 0 13px 13px;
+        }
+        .flask-neck {
+            width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.5);
+            border-bottom: none;
+            background: rgba(200, 220, 255, 0.1);
+            border-radius: 3px 3px 0 0;
+        }
+        .flask-label {
+            color: #ccc; font-size: 12px; margin-top: 5px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* --- ШТАТИВ И ПРОБИРКА --- */
+        .lab-stand {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .test-tube-container { position: relative; }
+        
+        .test-tube {
+            width: 80px; height: 220px;
+            border: 4px solid rgba(200, 200, 200, 0.7);
+            border-top: none;
+            border-radius: 0 0 40px 40px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 0 15px rgba(255,255,255,0.2), 0 5px 15px rgba(0,0,0,0.3);
+            overflow: hidden;
+            transition: 1.5s; 
+        }
+        .liquid {
+            position: absolute;
+            bottom: 0; width: 100%; height: 0%;
+            background: rgba(173, 216, 230, 0.4); 
+            transition: height 1s, background-color 1s, opacity 1s;
+            border-radius: 0 0 36px 36px;
+        }
+        .liquid.fill { height: 60%; }
+        .precipitate { background: rgba(139, 69, 19, 0.85) !important; }
+        .silver-mirror {
+            background: linear-gradient(135deg, #c0c0c0, #f8f8f8, #a9a9a9, #e8e8e8) !important;
+            box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.9), 0 5px 20px rgba(192, 192, 192, 0.6);
+        }
+        .silver-mirror .liquid { background: rgba(220, 220, 220, 0.2) !important; }
+
+        .stand-stick {
+            width: 10px; height: 280px;
+            background: linear-gradient(to right, #666, #888, #666);
+            position: absolute; top: -50px; left: -35px;
+            border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+        .stand-base {
+            width: 150px; height: 10px;
+            background: linear-gradient(to bottom, #888, #555);
+            position: absolute; bottom: -10px; left: -55px;
+            border-radius: 5px; box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+        }
+        .stand-clamp {
+            width: 20px; height: 10px;
+            background: #777;
+            position: absolute; top: -2px; left: -10px;
+            border-radius: 2px;
+        }
+
+        /* --- АНИМАЦИЯ КОЛБЫ (БЕЗ СТРУИ ВНУТРИ) --- */
+        .virtual-pour {
+            position: absolute;
+            top: -80px; 
+            left: 75%;
+            transform: translateX(-50%) translateY(-20px) rotate(0deg);
+            transform-origin: bottom right;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 20;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .virtual-pour.active {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0px) rotate(-70deg);
+        }
+        .v-flask-neck {
+            width: 20px; height: 15px;
+            border: 2px solid rgba(255,255,255,0.6);
+            border-bottom: none;
+            background: rgba(150, 200, 255, 0.1);
+            border-radius: 3px 3px 0 0;
+        }
+        .v-flask-body {
+            width: 40px; height: 40px;
+            background: rgba(150, 200, 255, 0.2);
+            border: 2px solid rgba(255,255,255,0.6);
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* --- СТРУЯ ЖИДКОСТИ (ОТДЕЛЬНО ОТ КОЛБЫ) --- */
+        .pour-stream {
+            position: absolute;
+            top: -18px;    /* Начинается чуть выше пробирки */
+            left: 25%;     /* Ровно по центру пробирки */
+            transform: translateX(-50%); /* Идеальное центрирование */
+            width: 6px;
+            height: 0;
+            background: linear-gradient(to bottom, rgba(100, 180, 255, 0.9), rgba(100, 180, 255, 0.2));
+            border-radius: 0 0 3px 3px;
+            opacity: 0;
+            transition: height 0.3s ease 0.5s, opacity 0.2s ease 0.5s; /* Появляется с задержкой после наклона колбы */
+            box-shadow: 0 0 8px rgba(100, 180, 255, 0.6);
+            z-index: 15;
+            pointer-events: none;
+        }
+        /* Активируем струю */
+        .pour-stream.active {
+            height: 110px; /* Длина струи ровно до дна пробирки */
+            opacity: 1;
+        }
+
+
+        /* --- ВОДЯНАЯ БАНЯ И НАГРЕВАНИЕ --- */
+        .water-bath-container {
+            position: absolute;
+            bottom: -30px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px; height: 50px;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: -1;
+        }
+        .water-bath-container.active { opacity: 1; z-index: 1; }
+        
+        .bath-glass {
+            width: 100%; height: 100%;
+            border: 3px solid rgba(200, 200, 200, 0.5);
+            border-radius: 0 0 10px 10px;
+            background: rgba(100, 149, 237, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .bath-water {
+            position: absolute; bottom: 0; width: 100%; height: 80%;
+            background: rgba(100, 149, 237, 0.4);
+            border-radius: 0 0 7px 7px;
+        }
+        .water-bath-container.active .bath-water {
+            animation: boil 0.5s infinite alternate;
+        }
+        @keyframes boil {
+            from { background-color: rgba(100, 149, 237, 0.4); }
+            to { background-color: rgba(150, 180, 255, 0.6); }
+        }
+
+        .burner {
+            position: absolute;
+            bottom: -25px; left: 50%;
+            transform: translateX(-50%);
+            width: 50px; height: 20px;
+            background: #555;
+            border-radius: 3px;
+        }
+        .flame {
+            position: absolute;
+            bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            width: 30px; height: 40px;
+            background: radial-gradient(circle, #ff4500 0%, #ff8c00 40%, transparent 70%);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .water-bath-container.active .flame {
+            opacity: 1;
+            animation: flicker 0.15s infinite alternate;
+        }
+        @keyframes flicker {
+            0% { transform: translateX(-50%) scale(1); opacity: 0.8; }
+            100% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+        }
+
+        /* --- ПАНЕЛЬ УПРАВЛЕНИЯ --- */
+        .black-area {
+            position: fixed; left: 0; bottom: 0; width: 100%; height: 120px;
+            background: linear-gradient(to bottom, #1a1a1a, #000);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; border-top: 2px solid #444;
+        }
+        .controls { margin-bottom: 10px; }
+        button.action-btn {
+            padding: 10px 20px; margin: 0 5px; font-size: 16px; font-weight: bold;
+            border: 2px solid #444; border-radius: 8px; cursor: pointer;
+            background: #222; color: #eee; transition: 0.3s;
+            text-shadow: 1px 1px 2px black;
+        }
+        button.action-btn:hover:not(:disabled) {
+            background: #444; border-color: #0f0; color: #0f0;
+            transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 255, 0, 0.2);
+        }
+        button.action-btn:disabled {
+            background: #111; color: #555; border-color: #222; cursor: not-allowed;
+        }
+        #log {
+            color: #0f0; font-size: 16px; text-align: center;
+            text-shadow: 0 0 8px #0f0; height: 24px; max-width: 90%;
+        }
+        .error { color: #ff4c4c !important; text-shadow: 0 0 8px #ff4c4c !important; }
+        .shake { animation: shake 0.4s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
         }
     </style>
-</head>
-<body>
-    <h1>Умный Калькулятор питания</h1>
-    <div class="container">
-        <label>Возраст:</label>
-        <input type="number" id="age" placeholder="Введите возраст">
-        <label>Вес (кг):</label>
-        <input type="number" id="weight" placeholder="Введите вес">
-        <label>Рост (см):</label>
-        <input type="number" id="height" placeholder="Введите рост">
-        <label>Пол:</label>
-        <select id="gender">
-            <option>Мужской</option>
-            <option>Женский</option>
-        </select>
-        <label>Активность:</label>
-        <select id="activity">
-            <option value="1.2">Минимальная</option>
-            <option value="1.375">Лёгкая</option>
-            <option value="1.55">Средняя</option>
-            <option value="1.725">Высокая</option>
-            <option value="1.9">Экстремальная</option>
-        </select>
-        <label>Цель:</label>
-        <select id="goal">
-            <option value="-300">Похудение</option>
-            <option value="0">Поддержание веса</option>
-            <option value="300">Набор массы</option>
-        </select>
-        <button onclick="calculate()">Составить рацион</button>
-        <div class="result" id="result"></div>
-        <div id="menu"></div>
-    </div>
     <script>
-        const dishes = {
-                    breakfast: [
-                { name: "Овсяная каша", calories: 150, protein: 5, fat: 3, carbs: 27 },
-                { name: "Яичница с овощами", calories: 200, protein: 12, fat: 10, carbs: 8 },
-                { name: "Творог с ягодами", calories: 180, protein: 14, fat: 6, carbs: 15 },
-                { name: "Панкейки с бананом", calories: 220, protein: 7, fat: 5, carbs: 40 },
-                { name: "Гречневая каша с молоком", calories: 190, protein: 6, fat: 4, carbs: 35 },
-                { name: "Бутерброд с яйцом и авокадо", calories: 250, protein: 8, fat: 12, carbs: 25 },
-                { name: "Смузи с йогуртом и фруктами", calories: 160, protein: 4, fat: 2, carbs: 35 },
-                { name: "Овощной омлет", calories: 180, protein: 10, fat: 6, carbs: 12 },
-                { name: "Тост с арахисовой пастой и бананом", calories: 210, protein: 8, fat: 9, carbs: 28 },
-                { name: "Запеканка из творога", calories: 200, protein: 15, fat: 7, carbs: 18 },
-                { name: "Сырники", calories: 230, protein: 12, fat: 8, carbs: 22 },
-                { name: "Блинчики с мёдом", calories: 240, protein: 6, fat: 9, carbs: 30 },
-                { name: "Гранола с орехами и сухофруктами", calories: 260, protein: 8, fat: 12, carbs: 35 },
-                { name: "Мюсли с молоком", calories: 180, protein: 7, fat: 4, carbs: 28 },
-                { name: "Булочка с ветчиной и сыром", calories: 220, protein: 10, fat: 8, carbs: 25 },
-                { name: "Киноа с фруктами", calories: 200, protein: 6, fat: 4, carbs: 30 },
-                { name: "Протеиновый шейк с молоком", calories: 180, protein: 15, fat: 3, carbs: 10 },
-                { name: "Творог с мёдом и орехами", calories: 190, protein: 14, fat: 7, carbs: 15 },
-                { name: "Кукурузные хлопья с йогуртом", calories: 170, protein: 6, fat: 4, carbs: 25 },
-                { name: "Овсяноблин с ягодами", calories: 210, protein: 10, fat: 6, carbs: 22 },
-                { name: "Тост с лососем и авокадо", calories: 250, protein: 12, fat: 14, carbs: 18 },
-                { name: "Гречневая каша с орехами", calories: 200, protein: 7, fat: 8, carbs: 24 },
-                { name: "Смузи с овсянкой и бананом", calories: 190, protein: 6, fat: 3, carbs: 28 },
-                { name: "Фруктовый салат с йогуртом", calories: 160, protein: 4, fat: 2, carbs: 32 },
-                { name: "Батончик с мюсли и орехами", calories: 170, protein: 5, fat: 7, carbs: 20 },
-                { name: "Рисовая каша на молоке", calories: 190, protein: 6, fat: 5, carbs: 30 },
-                { name: "Шоколадный смузи с протеином", calories: 200, protein: 15, fat: 6, carbs: 12 },
-                { name: "Блинчики с творогом", calories: 230, protein: 10, fat: 8, carbs: 25 },
-                { name: "Салат из киноа и фруктов", calories: 200, protein: 7, fat: 4, carbs: 28 },
-                { name: "Овощной хлеб с хумусом", calories: 190, protein: 8, fat: 5, carbs: 22 }
-            ],
+        let step = 0;
+        let isAnimating = false;
 
-                    lunch: [
-                { name: "Борщ", calories: 250, protein: 10, fat: 10, carbs: 30 },
-                { name: "Гречка с курицей", calories: 350, protein: 25, fat: 8, carbs: 45 },
-                { name: "Рис с овощами и рыбой", calories: 300, protein: 20, fat: 8, carbs: 40 },
-                { name: "Макароны с курицей", calories: 400, protein: 30, fat: 10, carbs: 50 },
-                { name: "Овощное рагу с индейкой", calories: 280, protein: 23, fat: 7, carbs: 25 },
-                { name: "Стейк с овощами гриль", calories: 350, protein: 30, fat: 10, carbs: 15 },
-                { name: "Фасоль с томатами", calories: 250, protein: 12, fat: 5, carbs: 30 },
-                { name: "Куриный суп с лапшой", calories: 220, protein: 18, fat: 6, carbs: 25 },
-                { name: "Плов с курицей", calories: 400, protein: 25, fat: 12, carbs: 45 },
-                { name: "Тушёная говядина с овощами", calories: 320, protein: 28, fat: 12, carbs: 15 },
-                { name: "Рагу из кабачков и моркови", calories: 200, protein: 6, fat: 5, carbs: 30 },
-                { name: "Рисовый суп с курицей", calories: 250, protein: 15, fat: 7, carbs: 28 },
-                { name: "Куриное карри с рисом", calories: 370, protein: 27, fat: 10, carbs: 40 },
-                { name: "Запечённая рыба с брокколи", calories: 280, protein: 25, fat: 8, carbs: 12 },
-                { name: "Овощное рагу с рисом", calories: 250, protein: 12, fat: 5, carbs: 35 },
-                { name: "Гречка с грибами", calories: 270, protein: 10, fat: 8, carbs: 40 },
-                { name: "Салат с киноа и овощами", calories: 250, protein: 10, fat: 6, carbs: 30 },
-                { name: "Суп из чечевицы", calories: 300, protein: 20, fat: 8, carbs: 35 },
-                { name: "Куриные рулетики с зеленью", calories: 330, protein: 30, fat: 9, carbs: 10 },
-                { name: "Лазанья с овощами и сыром", calories: 400, protein: 18, fat: 15, carbs: 50 },
-                { name: "Тефтели из индейки в соусе", calories: 320, protein: 28, fat: 12, carbs: 18 },
-                { name: "Куриный салат с яблоками", calories: 250, protein: 20, fat: 5, carbs: 15 },
-                { name: "Паста с томатами и базиликом", calories: 330, protein: 12, fat: 6, carbs: 50 },
-                { name: "Говяжий стейк с овощами", calories: 400, protein: 35, fat: 15, carbs: 10 },
-                { name: "Запечённый картофель с рыбой", calories: 350, protein: 20, fat: 12, carbs: 35 },
-                { name: "Котлеты из курицы с кашей", calories: 370, protein: 25, fat: 10, carbs: 45 },
-                { name: "Суп из брокколи с сыром", calories: 220, protein: 12, fat: 8, carbs: 10 },
-                { name: "Тыквенный суп", calories: 180, protein: 8, fat: 4, carbs: 28 },
-                { name: "Овощной суп с фрикадельками", calories: 250, protein: 18, fat: 6, carbs: 20 }
-            ],
+        const flaskMap = {
+            'AgNO3': 'flask-1',
+            'NaOH': 'flask-2',
+            'NH3': 'flask-3',
+            'aldehyde': 'flask-4'
+        };
 
-                        dinner: [
-                { name: "Овощной салат с тунцом", calories: 200, protein: 20, fat: 5, carbs: 10 },
-                { name: "Тушёная капуста с индейкой", calories: 220, protein: 23, fat: 7, carbs: 12 },
-                { name: "Омлет с сыром", calories: 250, protein: 18, fat: 15, carbs: 5 },
-                { name: "Куриные грудки с овощами", calories: 270, protein: 30, fat: 8, carbs: 10 },
-                { name: "Филе лосося с брокколи", calories: 300, protein: 25, fat: 15, carbs: 5 },
-                { name: "Запечённые овощи с сыром фета", calories: 200, protein: 10, fat: 10, carbs: 20 },
-                { name: "Овощной суп с говядиной", calories: 220, protein: 18, fat: 8, carbs: 15 },
-                { name: "Рулетики из индейки с зеленью", calories: 250, protein: 30, fat: 10, carbs: 5 },
-                { name: "Салат из киноа и шпината", calories: 230, protein: 12, fat: 8, carbs: 25 },
-                { name: "Куриные тефтели в томатном соусе", calories: 280, protein: 24, fat: 10, carbs: 15 },
-                { name: "Запечённая рыба с овощами", calories: 250, protein: 22, fat: 8, carbs: 10 },
-                { name: "Тушёный шпинат с чесноком", calories: 180, protein: 6, fat: 7, carbs: 15 },
-                { name: "Суп-пюре из тыквы", calories: 200, protein: 8, fat: 6, carbs: 30 },
-                { name: "Кабачки, фаршированные курицей", calories: 270, protein: 24, fat: 8, carbs: 12 },
-                { name: "Рыбные котлеты с овощным гарниром", calories: 300, protein: 26, fat: 12, carbs: 15 },
-                { name: "Куриные стрипсы на гриле", calories: 240, protein: 28, fat: 6, carbs: 8 },
-                { name: "Салат с яйцом и авокадо", calories: 250, protein: 12, fat: 15, carbs: 10 },
-                { name: "Гречка с овощами и грибами", calories: 230, protein: 8, fat: 6, carbs: 30 },
-                { name: "Салат из свежих овощей с курицей", calories: 250, protein: 22, fat: 5, carbs: 10 },
-                { name: "Куриное рагу с кабачками", calories: 260, protein: 24, fat: 8, carbs: 12 },
-                { name: "Салат Цезарь с креветками", calories: 280, protein: 20, fat: 10, carbs: 10 },
-                { name: "Запечённая индейка с овощами", calories: 300, protein: 32, fat: 8, carbs: 12 },
-                { name: "Сырные палочки из моцареллы", calories: 200, protein: 10, fat: 12, carbs: 8 },
-                { name: "Омлет с грибами и шпинатом", calories: 220, protein: 16, fat: 8, carbs: 5 },
-                { name: "Паста из цуккини с соусом песто", calories: 230, protein: 8, fat: 10, carbs: 15 },
-                { name: "Баклажаны на гриле с сыром", calories: 200, protein: 8, fat: 8, carbs: 20 },
-                { name: "Куриные рулеты с сыром", calories: 280, protein: 30, fat: 10, carbs: 5 },
-                { name: "Томаты, фаршированные говядиной", calories: 300, protein: 28, fat: 10, carbs: 12 },
-                { name: "Суп-пюре из шпината", calories: 180, protein: 8, fat: 5, carbs: 15 },
-                { name: "Креветки на гриле с чесноком", calories: 220, protein: 25, fat: 6, carbs: 5 }
-            ],
-                        snack: [
-                { name: "Фруктовый салат", calories: 120, protein: 2, fat: 1, carbs: 30 },
-                { name: "Ореховый батончик", calories: 150, protein: 4, fat: 8, carbs: 18 },
-                { name: "Йогурт с орехами", calories: 180, protein: 6, fat: 9, carbs: 15 },
-                { name: "Протеиновый шейк", calories: 160, protein: 20, fat: 2, carbs: 5 },
-                { name: "Творог с мёдом", calories: 170, protein: 14, fat: 6, carbs: 12 },
-                { name: "Смузи с фруктами", calories: 130, protein: 2, fat: 1, carbs: 28 },
-                { name: "Кусочек горького шоколада", calories: 100, protein: 2, fat: 8, carbs: 5 },
-                { name: "Банан", calories: 110, protein: 1, fat: 0, carbs: 27 },
-                { name: "Греческий йогурт", calories: 120, protein: 10, fat: 4, carbs: 5 },
-                { name: "Сухофрукты", calories: 140, protein: 2, fat: 0, carbs: 35 },
-                { name: "Овсяное печенье", calories: 160, protein: 4, fat: 6, carbs: 25 },
-                { name: "Гранола", calories: 150, protein: 5, fat: 6, carbs: 20 },
-                { name: "Печёное яблоко", calories: 100, protein: 1, fat: 0, carbs: 25 },
-                { name: "Рисовые хлебцы", calories: 90, protein: 2, fat: 0, carbs: 20 },
-                { name: "Авокадо на хлебце", calories: 140, protein: 3, fat: 9, carbs: 10 }
-            ]
+        function action(type) {
+            if (isAnimating) return;
+            
+            const logElement = document.getElementById("log");
+            const testTube = document.querySelector(".test-tube");
+            const liquid = document.querySelector(".liquid");
+            const pourAnim = document.querySelector(".virtual-pour");
+            const streamAnim = document.querySelector(".pour-stream");
+            const heatAnim = document.querySelector(".water-bath-container");
+
+            logElement.classList.remove("error", "shake");
+
+            if ((type === "AgNO3" && step === 0) ||
+                (type === "NaOH" && step === 1) ||
+                (type === "NH3" && step === 2) ||
+                (type === "aldehyde" && step === 3) ||
+                (type === "heat" && step === 4)) {
+                
+                isAnimating = true;
+                disableButtons(true);
+
+                if (type === "heat") {
+                    heatAnim.classList.add("active");
+                    setTimeout(() => {
+                        applyChemistry(type, testTube, liquid, logElement);
+                        heatAnim.classList.remove("active");
+                        isAnimating = false;
+                        if(step < 5) disableButtons(false);
+                    }, 2000);
+                } else {
+                    document.getElementById(flaskMap[type]).classList.add("used");
+                    
+                    // 1. Показываем наклоняющуюся колбу
+                    pourAnim.classList.add("active");
+                    // 2. Показываем струю (чуть позже, чтобы колба успела наклониться)
+                    streamAnim.classList.add("active");
+                    
+                    setTimeout(() => {
+                        applyChemistry(type, testTube, liquid, logElement);
+                        // Убираем все обратно
+                        pourAnim.classList.remove("active");
+                        streamAnim.classList.remove("active");
+                        isAnimating = false;
+                        if(step < 5) disableButtons(false);
+                    }, 1200);
+                }
+            } else {
+                log("Неверная последовательность! Следуйте инструкции.");
+                logElement.classList.add("error", "shake");
+            }
         }
 
-        function calculate() {
-            const age = parseInt(document.getElementById("age").value);
-            const weight = parseFloat(document.getElementById("weight").value);
-            const height = parseFloat(document.getElementById("height").value);
-            const gender = document.getElementById("gender").value;
-            const activity = parseFloat(document.getElementById("activity").value);
-            const goal = parseInt(document.getElementById("goal").value);
-
-            if (isNaN(age) || isNaN(weight) || isNaN(height)) {
-                document.getElementById("result").innerText = "Введите корректные данные.";
-                return;
+        function applyChemistry(type, testTube, liquid, logElement) {
+            if (type === "AgNO3") {
+                step = 1;
+                log("1. В чистую пробирку прилили раствор AgNO₃.");
+                liquid.classList.add("fill");
+            } else if (type === "NaOH") {
+                step = 2;
+                log("2. Добавили NaOH. Наблюдаем бурый осадок Ag₂O.");
+                liquid.classList.add("precipitate");
+            } else if (type === "NH3") {
+                step = 3;
+                log("3. Добавили NH₃. Осадок растворился — реактив Толленса готов.");
+                liquid.classList.remove("precipitate");
+            } else if (type === "aldehyde") {
+                step = 4;
+                log("4. Добавлено исследуемое вещество (альдегид).");
+            } else if (type === "heat") {
+                step = 5;
+                log("5-6. Нагрев на водяной бане. Образовалось «серебряное зеркало»!");
+                testTube.classList.add("silver-mirror");
+                disableButtons(true);
             }
+        }
 
-            const bmr = gender === "Мужской"
-                ? 88.36 + (13.4 * weight) + (4.8 * height) - (5.7 * age)
-                : 447.6 + (9.2 * weight) + (3.1 * height) - (4.3 * age);
+        function log(text) {
+            document.getElementById("log").innerText = text;
+        }
 
-            const calories = Math.round(bmr * activity + goal);
-            const protein = Math.round(0.3 * calories / 4);
-            const fats = Math.round(0.2 * calories / 9);
-            const carbs = Math.round(0.5 * calories / 4);
+        function disableButtons(state) {
+            document.querySelectorAll('button.action-btn').forEach(btn => btn.disabled = state);
+        }
+    </script>
+</head>
+<body>
 
-            document.getElementById("result").innerHTML = `
-                <b>Суточная норма:</b><br>
-                Калории: ${calories} ккал<br>
-                Белки: ${protein} г, Жиры: ${fats} г, Углеводы: ${carbs} г
-            `;
+    <!-- НОВЫЕ КНОПКИ В ВЕРХНЕМ ЛЕВОМ УГЛУ -->
+    <div class="top-bar">
+        <!-- ЗДЕСЬ ВПИШИТЕ СВОИ ПУТИ/ССЫЛКИ В АТРИБУТЫ href -->
+        <div style="position: relative; display: inline-block;">
+            <button class="top-btn" onclick="this.nextElementSibling.classList.toggle('show')">📋 Инструкция ▾</button>
+            <div class="dropdown-content" style="display: none; position: absolute; top: 100%; left: 0; background-color: #1a1a1a; min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5); z-index: 1000; border: 1px solid #0f0; border-radius: 0 0 5px 5px; overflow: hidden;">
+                <a href="#" class="dropdown-item" style="color: #eee; padding: 12px 16px; text-decoration: none; display: block; border-bottom: 1px solid #333;">Прилейте в чистую сухую пробирку раствор нитрата серебра (AgNO₃).</a>
+                <a href="#" class="dropdown-item" style="color: #eee; padding: 12px 16px; text-decoration: none; display: block; border-bottom: 1px solid #333;">Добавьте раствор гидроксида натрия (NaOH).</a>
+                <a href="#" class="dropdown-item" style="color: #eee; padding: 12px 16px; text-decoration: none; display: block; border-bottom: 1px solid #333;">Добавьте раствор аммиака (NH₃·H₂O) </a>
+                <a href="#" class="dropdown-item" style="color: #eee; padding: 12px 16px; text-decoration: none; display: block; border-bottom: 1px solid #333;">К полученному раствору добавьте исследуемое вещество</a>
+                <a href="#" class="dropdown-item" style="color: #eee; padding: 12px 16px; text-decoration: none; display: block;">Нагрейте</a>
+            </div>
+        </div>
+        <a href="Tasks.docx" class="top-btn">📄 Документ Word</a>
+        <a href="https://youtu.be/mYR5hSoufbQ?si=2O1XV9imb2bNeW_M" target="_blank" class="top-btn">▶ YouTube</a>
+    </div>
 
-            const target = {
-                calories: calories / 4,
-                protein: protein / 4,
-                fat: fats / 4,
-                carbs: carbs / 4
-            };
+    <div class="table-front"></div>
+    <div class="table-surface"></div>
 
-            function selectDishWithMass(dishList, target) {
-                let best = null;
-                let bestDiff = Infinity;
+    <div class="lab-scene">
+        <div class="table-flasks">
+            <div class="deco-flask" id="flask-1">
+                <div class="flask-neck"></div>
+                <div class="flask-body"></div>
+                <div class="flask-label">AgNO₃</div>
+            </div>
+            <div class="deco-flask" id="flask-2">
+                <div class="flask-neck"></div>
+                <div class="flask-body"></div>
+                <div class="flask-label">NaOH</div>
+            </div>
+            <div class="deco-flask" id="flask-3">
+                <div class="flask-neck"></div>
+                <div class="flask-body"></div>
+                <div class="flask-label">NH₃·H₂O</div>
+            </div>
+            <div class="deco-flask" id="flask-4">
+                <div class="flask-neck"></div>
+                <div class="flask-body"></div>
+                <div class="flask-label">Альдегид</div>
+            </div>
+        </div>
 
-                for (const dish of dishList) {
-                    let ratio = Math.min(
-                        target.calories / dish.calories,
-                        target.protein / dish.protein,
-                        target.fat / dish.fat,
-                        target.carbs / dish.carbs
-                    );
+        <div class="lab-stand">
+            <div class="stand-stick"></div>
+            <div class="stand-base"></div>
+            
+            <div class="test-tube-container">
+                <div class="stand-clamp"></div>
+                
+                <!-- Колба теперь отдельно -->
+                <div class="virtual-pour">
+                    <div class="v-flask-neck"></div>
+                    <div class="v-flask-body"></div>
+                </div>
 
-                    ratio = Math.max(0.5, Math.min(ratio, 5));
+                <div class="pour-stream"></div>
 
-                    const adjusted = {
-                        name: dish.name,
-                        mass: Math.round(ratio * 100),
-                        calories: Math.round(dish.calories * ratio),
-                        protein: Math.round(dish.protein * ratio),
-                        fat: Math.round(dish.fat * ratio),
-                        carbs: Math.round(dish.carbs * ratio)
-                    };
+                <div class="test-tube">
+                    <div class="liquid"></div>
+                </div>
 
-                    const diff = Math.abs(adjusted.calories - target.calories)
-                            + Math.abs(adjusted.protein - target.protein)
-                            + Math.abs(adjusted.fat - target.fat)
-                            + Math.abs(adjusted.carbs - target.carbs);
+                <div class="water-bath-container">
+                    <div class="flame"></div>
+                    <div class="burner"></div>
+                    <div class="bath-glass">
+                        <div class="bath-water"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    if (diff < bestDiff) {
-                        best = adjusted;
-                        bestDiff = diff;
-                    }
-                }
-
-                return best;
+    <div class="black-area">
+        <div id="log">Начните эксперимент: прилейте AgNO₃</div>
+        <div class="controls">
+            <!-- Добавил класс action-btn, чтобы не отключать верхние кнопки -->
+            <button class="action-btn" onclick="action('AgNO3')">AgNO₃</button>
+            <button class="action-btn" onclick="action('NaOH')">NaOH</button>
+            <button class="action-btn" onclick="action('NH3')">NH₃</button>
+            <button class="action-btn" onclick="action('aldehyde')">Альдегид</button>
+            <button class="action-btn" onclick="action('heat')">Нагрев</button>
+        </div>
+    </div>
+    <script>
+        // Простой скрипт для переключения видимости меню
+        document.addEventListener('click', function(e) {
+            // Закрываем меню, если клик был вне кнопки
+            if (!e.target.closest('.top-btn')) {
+                const dropdown = document.querySelector('.dropdown-content');
+                if (dropdown) dropdown.style.display = 'none';
             }
+        });
 
-            function totalMacros(meals) {
-                return meals.flat().reduce((sum, m) => ({
-                    calories: sum.calories + m.calories,
-                    protein: sum.protein + m.protein,
-                    fat: sum.fat + m.fat,
-                    carbs: sum.carbs + m.carbs
-                }), { calories: 0, protein: 0, fat: 0, carbs: 0 });
+        // Привязываем открытие/закрытие к кнопке (через атрибут onclick в HTML выше)
+        document.querySelector('.top-btn').onclick = function() {
+            const menu = this.nextElementSibling;
+            if (menu.style.display === 'block') {
+                menu.style.display = 'none';
+            } else {
+                menu.style.display = 'block';
             }
-
-            function addSecondDishIfNeeded(meals, type) {
-                const current = totalMacros([meals.breakfast, meals.lunch, meals.dinner, meals.snack]);
-                const remaining = {
-                    calories: calories - current.calories,
-                    protein: protein - current.protein,
-                    fat: fats - current.fat,
-                    carbs: carbs - current.carbs
-                };
-
-                if (remaining.calories < 100) return;
-
-                const dish = selectDishWithMass(dishes[type], {
-                    calories: remaining.calories / 2,
-                    protein: remaining.protein / 2,
-                    fat: remaining.fat / 2,
-                    carbs: remaining.carbs / 2
-                });
-
-                if (dish) meals[type].push(dish);
-            }
-            function getTotalMacros(meals) {
-                const total = {
-                    calories: 0,
-                    protein: 0,
-                    fat: 0,
-                    carbs: 0
-                };
-
-                for (const mealType in meals) {
-                    meals[mealType].forEach(dish => {
-                        total.calories += dish.calories;
-                        total.protein += dish.protein;
-                        total.fat += dish.fat;
-                        total.carbs += dish.carbs;
-                    });
-                }
-
-                return total;
-            }
-
-
-            const meals = {
-                breakfast: [selectDishWithMass(dishes.breakfast, target)],
-                lunch: [selectDishWithMass(dishes.lunch, target)],
-                dinner: [selectDishWithMass(dishes.dinner, target)],
-                snack: [selectDishWithMass(dishes.snack, target)]
-            };
-
-            // Добавим второе блюдо, если нужно (в порядке приоритета)
-            ["lunch", "dinner", "breakfast", "snack"].forEach(type => {
-                addSecondDishIfNeeded(meals, type);
-            });
-
-            function renderMeals(mealName, items, emoji) {
-                return items.map(item =>
-                    `<tr><td>${emoji} ${mealName}</td><td>${item.name}</td><td>${item.mass}</td><td>${item.calories}</td><td>${item.protein}</td><td>${item.fat}</td><td>${item.carbs}</td></tr>`
-                ).join("");
-            }
-
-            document.getElementById("menu").innerHTML = `
-                <h3>Рекомендуемый рацион:</h3>
-                <table>
-                    <tr><th>Прием пищи</th><th>Блюдо</th><th>Масса (г)</th><th>Ккал</th><th>Б</th><th>Ж</th><th>У</th></tr>
-                    ${renderMeals("Завтрак", meals.breakfast, "🍳")}
-                    ${renderMeals("Обед", meals.lunch, "🍲")}
-                    ${renderMeals("Ужин", meals.dinner, "🥗")}
-                    ${renderMeals("Перекус", meals.snack, "🍎")}
-                </table>
-            `;
-            const totals = getTotalMacros(meals);
-            document.getElementById("menu").innerHTML += `
-                <p><b>Фактический рацион:</b><br>
-                Калории: ${totals.calories} ккал, Белки: ${totals.protein} г, Жиры: ${totals.fat} г, Углеводы: ${totals.carbs} г</p>
-            `;
-
-            }
-
-
+        }
     </script>
 </body>
 </html>
-
